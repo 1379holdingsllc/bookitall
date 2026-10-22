@@ -206,6 +206,18 @@ footer details li{margin:2px 0}footer details a{color:#cfcfcf}
         else st.removeItem(K);
       });
     })();
+    // 2026-10-22: "Start from an example" fills the details box with an editable template
+    form.querySelectorAll('.js-tpl').forEach(function(b){
+      b.style.display='';
+      b.addEventListener('click',function(){
+        var t=document.getElementById(b.getAttribute('data-for'));if(!t)return;
+        var v=b.getAttribute('data-tpl'),c=t.value.replace(/\s+$/,'');
+        if(c.indexOf(v)>=0){t.focus();return}
+        t.value=c?c+'\n\n'+v:v;t.focus();
+        var i=t.value.indexOf('___',c.length);if(i>=0)t.setSelectionRange(i,i+3);
+        t.dispatchEvent(new Event('input'));
+      });
+    });
     form.addEventListener('submit',function(ev){
       var first=null;els.forEach(function(el){if(!check(el)&&!first)first=el});
       if(first){ev.preventDefault();var d=first.closest('details');if(d)d.open=true;first.focus();return}
