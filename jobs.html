@@ -110,6 +110,7 @@ footer details li{margin:2px 0}footer details a{color:#cfcfcf}
 .mbar .call{display:inline-flex;align-items:center;justify-content:center;width:56px;border:1.5px solid var(--line);border-radius:10px;color:var(--t)}
 .mbar.hide,.mbar.pre{transform:translateY(120%)}
 @media(min-width:760px){.mbar{display:none}}
+.chips{display:none;flex-wrap:wrap;gap:8px;margin:8px 0 2px}.chips.on{display:flex}.chips button{min-height:44px;padding:8px 14px;border:1.5px solid var(--line);border-radius:999px;background:#fff;color:var(--t);font:inherit;font-size:.92rem;font-weight:600;cursor:pointer}.chips button[aria-pressed=true]{border-color:var(--ad);background:var(--bg);box-shadow:inset 0 0 0 1px var(--ad)}.chips button:focus-visible{outline:3px solid var(--ad);outline-offset:2px}.chipnote{display:block;color:var(--m);font-size:.85rem;margin-top:4px}
 .newnote{margin:22px 0 0;padding:14px 18px;border-left:4px solid var(--a);background:#fff;border-radius:0 10px 10px 0;font-size:.97rem;color:var(--m);max-width:46em}.newnote strong{color:var(--t)}
 /* thanks */
 .thx{min-height:70vh;display:grid;place-items:center;text-align:center;padding:60px 20px;background:var(--bg)}
@@ -218,6 +219,27 @@ footer details li{margin:2px 0}footer details a{color:#cfcfcf}
         var i=t.value.indexOf('___',c.length);if(i>=0)t.setSelectionRange(i,i+3);
         t.dispatchEvent(new Event('input'));
       });
+    });
+    // 2026-10-24: one-tap chips (quick dates + size picks); JS-only buttons, never submitted
+    form.querySelectorAll('.chips').forEach(function(g){
+      var t=document.getElementById(g.getAttribute('data-for'));if(!t)return;
+      g.classList.add('on');
+      function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+      g.querySelectorAll('button').forEach(function(b){
+        b.addEventListener('click',function(){
+          var dd=b.getAttribute('data-days'),v=b.getAttribute('data-v');
+          if(b.hasAttribute('data-flex')){var fx=form.querySelector('input[name=flexible]');if(fx){fx.checked=!fx.checked;b.setAttribute('aria-pressed',fx.checked?'true':'false')}return}
+          if(dd!==null){var d=new Date(),w=d.getDay(),n=0;
+            if(dd==='sat')n=(6-w+7)%7;else if(dd==='mon')n=((8-w)%7)||7;else n=parseInt(dd,10);
+            d.setDate(d.getDate()+n);v=ymd(d)}
+          t.value=v;
+          g.querySelectorAll('button:not([data-flex])').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
+          t.dispatchEvent(new Event('input'));t.dispatchEvent(new Event('change'));check(t);
+        });
+      });
+      var fxb=g.querySelector('[data-flex]'),fxi=form.querySelector('input[name=flexible]');
+      if(fxb&&!fxi)fxb.remove();else if(fxb)fxi.addEventListener('change',function(){fxb.setAttribute('aria-pressed',fxi.checked?'true':'false')});
+      t.addEventListener('input',function(){if(!t.value)g.querySelectorAll('button:not([data-flex])').forEach(function(x){x.setAttribute('aria-pressed','false')})});
     });
     form.addEventListener('submit',function(ev){
       var first=null;els.forEach(function(el){if(!check(el)&&!first)first=el});
