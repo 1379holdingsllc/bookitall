@@ -223,7 +223,8 @@ footer details li{margin:2px 0}footer details a{color:#cfcfcf}
     // 2026-10-24: one-tap chips (quick dates + size picks); JS-only buttons, never submitted
     form.querySelectorAll('.chips').forEach(function(g){
       var t=document.getElementById(g.getAttribute('data-for'));if(!t)return;
-      g.classList.add('on');
+      g.classList.add('on');var multi=g.hasAttribute('data-multi');
+      if(multi){var nt=g.nextElementSibling;if(nt&&nt.classList.contains('chipjs'))nt.style.display='block'}
       function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
       g.querySelectorAll('button').forEach(function(b){
         b.addEventListener('click',function(){
@@ -232,6 +233,9 @@ footer details li{margin:2px 0}footer details a{color:#cfcfcf}
           if(dd!==null){var d=new Date(),w=d.getDay(),n=0;
             if(dd==='sat')n=(6-w+7)%7;else if(dd==='mon')n=((8-w)%7)||7;else n=parseInt(dd,10);
             d.setDate(d.getDate()+n);v=ymd(d)}
+          if(multi){var parts=t.value.split(',').map(function(x){return x.trim()}).filter(Boolean),ix=parts.indexOf(v);
+            if(ix>=0)parts.splice(ix,1);else parts.push(v);t.value=parts.join(', ');b.setAttribute('aria-pressed',ix>=0?'false':'true');
+            t.dispatchEvent(new Event('input'));t.dispatchEvent(new Event('change'));check(t);return}
           t.value=v;
           g.querySelectorAll('button:not([data-flex])').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
           t.dispatchEvent(new Event('input'));t.dispatchEvent(new Event('change'));check(t);
@@ -239,6 +243,7 @@ footer details li{margin:2px 0}footer details a{color:#cfcfcf}
       });
       var fxb=g.querySelector('[data-flex]'),fxi=form.querySelector('input[name=flexible]');
       if(fxb&&!fxi)fxb.remove();else if(fxb)fxi.addEventListener('change',function(){fxb.setAttribute('aria-pressed',fxi.checked?'true':'false')});
+      if(multi)t.addEventListener('input',function(){var ps=t.value.split(',').map(function(x){return x.trim()});g.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',ps.indexOf(x.getAttribute('data-v'))>=0?'true':'false')})});
       t.addEventListener('input',function(){if(!t.value)g.querySelectorAll('button:not([data-flex])').forEach(function(x){x.setAttribute('aria-pressed','false')})});
     });
     form.addEventListener('submit',function(ev){
