@@ -111,6 +111,7 @@ footer details li{margin:2px 0}footer details a{color:#cfcfcf}
 .mbar.hide,.mbar.pre{transform:translateY(120%)}
 @media(min-width:760px){.mbar{display:none}}
 .chips{display:none;flex-wrap:wrap;gap:8px;margin:8px 0 2px}.chips.on{display:flex}.chips button{min-height:44px;padding:8px 14px;border:1.5px solid var(--line);border-radius:999px;background:#fff;color:var(--t);font:inherit;font-size:.92rem;font-weight:600;cursor:pointer}.chips button[aria-pressed=true]{border-color:var(--ad);background:var(--bg);box-shadow:inset 0 0 0 1px var(--ad)}.chips button:focus-visible{outline:3px solid var(--ad);outline-offset:2px}.chipnote{display:block;color:var(--m);font-size:.85rem;margin-top:4px}
+.again{border:1.5px dashed var(--line);border-radius:12px;padding:12px 14px;margin:0 0 14px;background:var(--bg)}.again p{margin:0 0 8px}.again .ag-t{font-weight:700}.again button{min-height:44px;padding:8px 16px;border:1.5px solid var(--ad);border-radius:999px;background:#fff;color:var(--t);font:inherit;font-weight:700;cursor:pointer}.again button:focus-visible{outline:3px solid var(--ad);outline-offset:2px}.again .ag-m{margin:8px 0 0;color:var(--m);font-size:.9rem}.again .ag-m:empty{display:none}
 .newnote{margin:22px 0 0;padding:14px 18px;border-left:4px solid var(--a);background:#fff;border-radius:0 10px 10px 0;font-size:.97rem;color:var(--m);max-width:46em}.newnote strong{color:var(--t)}
 /* thanks */
 .thx{min-height:70vh;display:grid;place-items:center;text-align:center;padding:60px 20px;background:var(--bg)}
@@ -201,11 +202,29 @@ footer details li{margin:2px 0}footer details a{color:#cfcfcf}
       var note=form.querySelector('.remnote'),d=null;try{d=JSON.parse(st.getItem(K)||'null')}catch(x){}
       if(d){var n=0;for(var k in F){var el=form.querySelector(F[k]);if(el&&!el.value&&d[k]){el.value=d[k];n++}}rb.checked=true;if(n&&note)note.style.display=''}
       var fb=form.querySelector('.js-forget');
-      if(fb)fb.addEventListener('click',function(){st.removeItem(K);for(var k in F){var el=form.querySelector(F[k]);if(el)el.value=''}rb.checked=false;if(note)note.style.display='none';var f=form.querySelector(F.name);if(f)f.focus()});
+      if(fb)fb.addEventListener('click',function(){st.removeItem(K);for(var i=st.length-1;i>=0;i--){var kk=st.key(i);if(kk&&kk.indexOf(K+':last:')===0)st.removeItem(kk)}document.querySelectorAll('.again').forEach(function(a){a.style.display='none'});for(var k in F){var el=form.querySelector(F[k]);if(el)el.value=''}rb.checked=false;if(note)note.style.display='none';var f=form.querySelector(F.name);if(f)f.focus()});
+      // 2026-10-27: "Request the same again" (same opt-in box; saved only on this device, never sent on its own)
+      var nd=form.querySelector('select[name=need]'),ag=form.querySelector('.again'),LK=nd?K+':last:'+nd.id:'';
+      var LF=[['textarea[name=details]','t'],['input[name=location]','l'],['input[name=size_details]','s'],['input[name=access_notes]','a']];
+      if(nd&&ag){var lr=null;try{lr=JSON.parse(st.getItem(LK)||'null')}catch(x){}
+        if(lr&&lr.n){
+          ag.querySelector('.ag-t').textContent=lr.n+(lr.l?' in '+lr.l:'');ag.style.display='';
+          var abtn=ag.querySelector('.js-again');
+          abtn.addEventListener('click',function(){
+            if([].some.call(nd.options,function(o){return o.value===lr.n})){nd.value=lr.n;nd.dispatchEvent(new Event('change'));check(nd)}
+            var opened=false;
+            LF.forEach(function(q){var el=form.querySelector(q[0]);if(el&&lr[q[1]]&&!el.value){el.value=lr[q[1]];el.dispatchEvent(new Event('input'));check(el);var dt=el.closest('details');if(dt){dt.open=true;opened=true}}});
+            abtn.style.display='none';
+            ag.querySelector('.ag-m').textContent='Filled in from your last request. Pick a date, check the details, then send.';
+            var dtf=form.querySelector('input[name=date]');if(dtf)dtf.focus();
+          });
+        }
+      }
       form.addEventListener('submit',function(){
         if(!form.checkValidity())return;
-        if(rb.checked){var o={};for(var k in F){var el=form.querySelector(F[k]);if(el&&el.value)o[k]=el.value.trim()}try{st.setItem(K,JSON.stringify(o))}catch(x){}}
-        else st.removeItem(K);
+        if(rb.checked){var o={};for(var k in F){var el=form.querySelector(F[k]);if(el&&el.value)o[k]=el.value.trim()}try{st.setItem(K,JSON.stringify(o))}catch(x){}
+          if(nd&&nd.value&&ag){var lo={n:nd.value};LF.forEach(function(q){var el=form.querySelector(q[0]);if(el&&el.value.trim())lo[q[1]]=el.value.trim()});try{st.setItem(LK,JSON.stringify(lo))}catch(x){}}}
+        else{st.removeItem(K);if(LK)st.removeItem(LK)}
       });
     })();
     // 2026-10-22: "Start from an example" fills the details box with an editable template
